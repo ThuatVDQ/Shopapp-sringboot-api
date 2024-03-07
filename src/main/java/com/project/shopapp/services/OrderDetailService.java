@@ -29,17 +29,28 @@ public class OrderDetailService implements IOrderDetailService{
                 .orderId(order)
                 .productId(product)
                 .numberOfProducts(orderDetailDTO.getNumberOfProducts())
+                .price(orderDetailDTO.getPrice())
                 .totalMoney(orderDetailDTO.getTotalMoney())
                 .color(orderDetailDTO.getColor())
                 .build();
-
-        orderDetailRepository.save(orderDetail);
-        return null;
+        return orderDetailRepository.save(orderDetail);
     }
 
     @Override
-    public OrderDetail updateOrderDetail(OrderDetailDTO orderDetailDTO) {
-        return null;
+    public OrderDetail updateOrderDetail(Long id, OrderDetailDTO orderDetailDTO) throws DataNotFoundException {
+        OrderDetail existingOrderDetail = orderDetailRepository.findById(id).orElseThrow(
+                () -> new DataNotFoundException("Cannot find order detail with id " + id));
+        Order existingOrder = orderRepository.findById(orderDetailDTO.getOrderId()).orElseThrow(
+                () -> new DataNotFoundException("Cannot find order with id " + orderDetailDTO.getOrderId()));
+        Product existingProduct = productRepository.findById(orderDetailDTO.getProductId()).orElseThrow(
+                () -> new DataNotFoundException("Cannot find product with id " + orderDetailDTO.getProductId()));
+        existingOrderDetail.setColor(orderDetailDTO.getColor());
+        existingOrderDetail.setNumberOfProducts(orderDetailDTO.getNumberOfProducts());
+        existingOrderDetail.setPrice(orderDetailDTO.getPrice());
+        existingOrderDetail.setTotalMoney(orderDetailDTO.getTotalMoney());
+        existingOrderDetail.setOrderId(existingOrder);
+        existingOrderDetail.setProductId(existingProduct);
+        return orderDetailRepository.save(existingOrderDetail);
     }
 
     @Override
