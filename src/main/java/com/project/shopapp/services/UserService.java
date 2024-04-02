@@ -1,8 +1,7 @@
 package com.project.shopapp.services;
 
-import com.project.shopapp.configurations.JwtUtil;
+import com.project.shopapp.components.JwtUtils;
 import com.project.shopapp.dtos.UserDTO;
-import com.project.shopapp.exceptions.DataNotFoundException;
 import com.project.shopapp.exceptions.PermissionDenyException;
 import com.project.shopapp.models.Role;
 import com.project.shopapp.models.User;
@@ -23,7 +22,7 @@ public class UserService implements IUserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtil;
     private final AuthenticationManager authenticationManager;
     @Override
     public User createUser(UserDTO userDTO) throws Exception {

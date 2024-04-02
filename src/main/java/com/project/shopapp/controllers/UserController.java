@@ -1,11 +1,16 @@
 package com.project.shopapp.controllers;
 
+import com.project.shopapp.components.LocalizationUtils;
 import com.project.shopapp.dtos.UserDTO;
 import com.project.shopapp.dtos.UserLoginDTO;
 import com.project.shopapp.models.User;
+import com.project.shopapp.responses.LoginResponse;
 import com.project.shopapp.services.IUserService;
+import com.project.shopapp.utils.MessageKeys;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -13,8 +18,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
+import java.rmi.server.RemoteRef;
 import java.util.List;
+import java.util.Locale;
 
 
 @RestController
@@ -23,7 +32,7 @@ import java.util.List;
 public class UserController {
 
     private final IUserService userService;
-
+    private final LocalizationUtils localizationUtils;
     @PostMapping("/register")
     public ResponseEntity<?> createUser(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
         try {
@@ -32,7 +41,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body(errorMessage);
             }
             if (!userDTO.getPassword().equals(userDTO.getRetypePassword())) {
-                return ResponseEntity.badRequest().body("Password does not match");
+                return ResponseEntity.badRequest().body(localizationUtils.getLocalizedMessage(MessageKeys.PASSWORD_NOT_MATCH));
             }
             User user = userService.createUser(userDTO);
             //return ResponseEntity.ok("Register successfully");
@@ -43,12 +52,26 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login( @Valid @RequestBody UserLoginDTO userLoginDTO) {
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody UserLoginDTO userLoginDTO,
+            HttpServletRequest request
+            ) {
         try {
             String token = userService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword());
-            return ResponseEntity.ok(token);
+
+            return ResponseEntity.ok(LoginResponse
+                    .builder()
+                    .message(localizationUtils.getLocalizedMessage(MessageKeys.LOGIN_SUCCESSFULLY))
+                    .token(token)
+                    .build()
+            );
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(LoginResponse
+                    .builder()
+                    .message(localizationUtils.getLocalizedMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
+                    .token(null)
+                    .build()
+            );
         }
     }
 }

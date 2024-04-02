@@ -1,6 +1,7 @@
 package com.project.shopapp.controllers;
 
 import com.github.javafaker.Faker;
+import com.project.shopapp.components.LocalizationUtils;
 import com.project.shopapp.dtos.ProductDTO;
 import com.project.shopapp.dtos.ProductImageDTO;
 import com.project.shopapp.exceptions.DataNotFoundException;
@@ -38,7 +39,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
-
+    private final LocalizationUtils localizationUtils;
     @PostMapping("")
     public ResponseEntity<?> createProduct(
             @Valid @RequestBody ProductDTO productDTO,

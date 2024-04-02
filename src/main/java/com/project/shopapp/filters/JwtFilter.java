@@ -1,6 +1,6 @@
 package com.project.shopapp.filters;
 
-import com.project.shopapp.configurations.JwtUtil;
+import com.project.shopapp.components.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.data.util.Pair;
@@ -28,7 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Value("${api.prefix}")
     private String apiPrefix;
     private final UserDetailsService userDetailsService;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtil;
     @Override
     protected void doFilterInternal(
             @NotNull HttpServletRequest request,
@@ -62,16 +61,21 @@ public class JwtFilter extends OncePerRequestFilter {
     }
     private boolean isBypassToken(@NotNull HttpServletRequest request) {
         final List<Pair<String, String>> bypassTokens = Arrays.asList(
-                Pair.of(String.format("/%s/users/register", apiPrefix), "POST"),
-                Pair.of(String.format("/%s/users/login", apiPrefix), "POST"),
-                Pair.of(String.format("/%s/products", apiPrefix), "GET"),
-                Pair.of(String.format("/%s/categories", apiPrefix), "POST")
+                Pair.of(String.format("%s/users/register", apiPrefix), "POST"),
+                Pair.of(String.format("%s/users/login", apiPrefix), "POST"),
+                Pair.of(String.format("%s/products**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/categories**", apiPrefix), "POST")
         );
-        //why i send the request form the apiPrefix/users/login it's not bypassed?
-        //
-        for (Pair<String, String> bypassToken : bypassTokens) {
-            if (request.getRequestURI().equals(bypassToken.getFirst()) &&
-                    request.getMethod().equals(bypassToken.getSecond())) {
+
+        String requestPath = request.getServletPath();
+        String requestMethod = request.getMethod();
+
+        for (Pair<String, String> token : bypassTokens) {
+            String path = token.getFirst();
+            String method = token.getSecond();
+            // Check if the request path and method match any pair in the bypassTokens list
+            if (requestPath.matches(path.replace("**", ".*"))
+                    && requestMethod.equalsIgnoreCase(method)) {
                 return true;
             }
         }
