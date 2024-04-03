@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ public class UserService implements IUserService {
     private final JwtUtils jwtUtil;
     private final AuthenticationManager authenticationManager;
     @Override
+    @Transactional
     public User createUser(UserDTO userDTO) throws Exception {
         String phoneNumber= userDTO.getPhoneNumber();
 
