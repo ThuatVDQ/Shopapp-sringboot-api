@@ -12,6 +12,7 @@ import com.project.shopapp.responses.ProductResponse;
 import com.project.shopapp.services.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -199,5 +200,23 @@ public class ProductController {
             }
         }
         return ResponseEntity.ok("Fake Products created successfully");
+    }
+    @GetMapping("/images/{imageName}")
+    public ResponseEntity<?> getImage(@PathVariable String imageName) {
+        try {
+            Path path = Paths.get("uploads/" + imageName);
+            UrlResource resource = new UrlResource(path.toUri());
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .body(resource);
+            } else {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .body(new UrlResource(Paths.get("uploads/notfound.jpg").toUri()));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
