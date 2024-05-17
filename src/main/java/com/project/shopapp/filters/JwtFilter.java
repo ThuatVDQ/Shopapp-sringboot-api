@@ -1,6 +1,7 @@
 package com.project.shopapp.filters;
 
 import com.project.shopapp.components.JwtUtils;
+import com.project.shopapp.models.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,32 +36,39 @@ public class JwtFilter extends OncePerRequestFilter {
             @NotNull FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            if (isBypassToken(request)) {
-                filterChain.doFilter(request, response);
+            if(isBypassToken(request)) {
+                filterChain.doFilter(request, response); //enable bypass
                 return;
             }
-            final String authorizationHeader = request.getHeader("Authorization");
-            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                final String token = authorizationHeader.substring(7);
-                final String phoneNumber = jwtUtil.extractPhoneNumber(token);
-                if (phoneNumber != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = (UserDetails) userDetailsService.loadUserByUsername(phoneNumber);
-                    if (jwtUtil.validateToken(token, userDetails)) {
-                        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        );
-                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    }
-                }
-                filterChain.doFilter(request, response);
+            final String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                return;
             }
-        } catch (Exception e) {
+            final String token = authHeader.substring(7);
+            final String phoneNumber = jwtUtil.extractPhoneNumber(token);
+            if (phoneNumber != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+                User userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+                if(jwtUtil.validateToken(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            }
+            filterChain.doFilter(request, response); //enable bypass
+        }catch (Exception e) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
         }
     }
     private boolean isBypassToken(@NotNull HttpServletRequest request) {
         final List<Pair<String, String>> bypassTokens = Arrays.asList(
+                Pair.of(String.format("%s/roles", apiPrefix), "GET"),
                 Pair.of(String.format("%s/users/register", apiPrefix), "POST"),
                 Pair.of(String.format("%s/users/login", apiPrefix), "POST"),
                 Pair.of(String.format("%s/products**", apiPrefix), "GET"),

@@ -48,12 +48,12 @@ public class User extends BaseEntity implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "role_id")
-    private Role roleId;
+    private Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + roleId.getName().toUpperCase()));
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()));
         //authorities.add(new SimpleGrantedAuthority("USER"));
         return authorities;
     }
